@@ -28,13 +28,15 @@ cmap=plt.get_cmap('jet')
 
 Cfixed = np.zeros((N,N))
 Cfixed[80:95,80:95] = 0.8
+#E/I signature.
+ei,_,_=EXIN.generate_ei(N)
 
-C_or_N = EXIN.generate_Crec(EXIN.generate_ei(N)[0])
+C_or_N = EXIN.generate_Crec(ei)
 
 ax1 = plt.subplot(231)
-plt.imshow(C_or_N)
+plt.imshow(C_or_N*ei)
 plt.colorbar()
-plt.title('Connection matrices')
+plt.title('Connection matrices',fontsize='small')
 
 
 ax2 = plt.subplot(232)
@@ -89,8 +91,7 @@ plt.savefig('net-con.png',dpi= 300)
 #Winh = -W[np.where(W < 0)]
 
 N = 100
-#E/I signature.
-ei,_,_=EXIN.generate_ei(N)
+
 # the connection matrix
 C_or_N =EXIN.generate_Crec(ei)
 C_or_N[80:95,80:95]=0
@@ -100,13 +101,30 @@ Cfixed[80:95,80:95] = 0.8
 #Mask for plastic and fixed weights
 C  = Connectivity(C_or_N, Cfixed=Cfixed )
 Wrec0=EXIN.init_weights(rng,C,m=N,n=N,distribution = 'normal')
-Wrec =np.abs(C.mask_plastic*Wrec0+ C.mask_fixed)
-Wrec = Wrec * ei
+WrecPlus =np.abs(C.mask_plastic*Wrec0+ C.mask_fixed)
+Wrec = WrecPlus * ei
 
 
 fig=plt.figure(2,figsize=(7,5))
 plt.clf()
 cmap=plt.get_cmap('jet')
+
+ax1=plt.subplot(221)
+plt.imshow(C.mask_plastic,cmap=cmap)
+plt.colorbar()
+plt.title('$M^{rec}$')
+
+ax2=plt.subplot(222)
+plt.imshow(Wrec0,cmap=cmap)
+plt.colorbar()
+plt.title('$W^{rec,plastic}$')
+
+ax3=plt.subplot(223)
+plt.imshow(WrecPlus,cmap=cmap)
+plt.colorbar()
+plt.title('$W^{rec,+}$',fontsize='medium')
+
+ax4=plt.subplot(224)
 plt.imshow( Wrec,cmap=cmap)
 plt.colorbar()
 plt.title('$W^{rec}$')
