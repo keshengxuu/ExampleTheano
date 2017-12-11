@@ -44,7 +44,7 @@ def generate_ei(N, pE=0.8):
 # Functions for generating connection matrices
 #-----------------------------------------------------------------------------------------
 
-def generate_Crec(ei, p_exc=1, p_inh=1, rng=None, seed=1, allow_self=False):
+def generate_Crec(ei, p_exc=0.2, p_inh=0.3, rng=None, seed=1, allow_self=False):
     if rng is None:
         rng = np.random.RandomState(seed)
 
@@ -140,27 +140,47 @@ if __name__=="__main__":
     #Winh = -W[np.where(W < 0)]
     
     N = 100
+    #E/I signature.
+    ei,_,_=generate_ei(N)
     # the connection matrix
-    C_or_N = generate_Crec(generate_ei(N)[0])
+    C_or_N = generate_Crec(ei)
     C_or_N[80:95,80:95]=0
-    #the weight will be nor training
+    #the weight will be not training
     Cfixed = np.zeros((N,N))
     Cfixed[80:95,80:95] = 0.8
     #Mask for plastic and fixed weights
-    C  = Connectivity(C_or_N, Cfixed=Cfixed )
-    Wrec0=init_weights(rng,C,m=N,n=N,distribution = 'normal')
-    Wrec =np.abs(C.mask_plastic*Wrec0+ C.mask_fixed)
-    ei,_,_=generate_ei(N)
-    Wrec = Wrec * ei
+    connectivity_mask  = Connectivity(C_or_N, Cfixed=Cfixed )
+    # Store the pre-synaptic neurons to each plastic neuron
+    W_plastic = [list(np.nonzero(connectivity_mask.mask_plastic[i, :])[0]) for i in range(N)]
+    # Wrec_plastic is the weight after trainning
+    Wrec_plastic = init_weights(rng,connectivity_mask,m=N,n=N,distribution = 'normal')
+    # Wrec_fixed is a matrix of fixed weights
+    Wrec_fixed = connectivity_mask.mask_fixed
+    
+    Wrec_plus = np.abs(connectivity_mask.mask_plastic*Wrec_plastic+ Wrec_fixed)
+    #Weights between the recurrent units
+    Wrec = Wrec_plus * ei
     
     
     fig=plt.figure(1,figsize=(7,5))
     plt.clf()
     cmap=plt.get_cmap('jet')
+    plt.subplot(221)
+    plt.imshow( connectivity_mask.mask_plastic,cmap=cmap)
+    plt.colorbar()
+    plt.title('plastic mask')
+    plt.subplot(222)
+    plt.imshow( Wrec_plastic,cmap=cmap)
+    plt.colorbar()
+    plt.title('Wrec plastic')
+    plt.subplot(223)
+    plt.imshow( Wrec_plus,cmap=cmap)
+    plt.colorbar()
+    plt.title('$W^{rec,+}$')
+    plt.subplot(224)
     plt.imshow( Wrec,cmap=cmap)
     plt.colorbar()
     plt.title('$W^{rec}$')
-    
     
     plt.tight_layout()
     
