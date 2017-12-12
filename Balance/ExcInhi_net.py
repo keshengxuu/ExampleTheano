@@ -7,6 +7,7 @@ Created on Mon Dec  4 17:57:21 2017
 """
 import numpy as np
 from conne_matrix import Connectivity
+from numpy.ma import masked_array
 
 #-----------------------------------------------------------------------------------------
 # Define E/I populations
@@ -144,22 +145,27 @@ if __name__=="__main__":
     ei,_,_=generate_ei(N)
     # the connection matrix
     C_or_N = generate_Crec(ei)
-    C_or_N[80:95,80:95]=0
+    FN = int(N*0.5)
+    C_or_N[:FN,:FN]=0
     #the weight will be not training
-    Cfixed = np.zeros((N,N))
-    Cfixed[80:95,80:95] = 0.8
+    Cfixed = np.zeros((N, N))
+    Cfixed[:FN,:FN] = np.abs(np.random.randn(FN,FN)/np.sqrt(FN))
+    Cfixed[np.diag_indices_from(Cfixed)] = 0
+    
     #Mask for plastic and fixed weights
     connectivity_mask  = Connectivity(C_or_N, Cfixed=Cfixed )
     # Store the pre-synaptic neurons to each plastic neuron
     W_plastic = [list(np.nonzero(connectivity_mask.mask_plastic[i, :])[0]) for i in range(N)]
     # Wrec_plastic is the weight after trainning
     Wrec_plastic = init_weights(rng,connectivity_mask,m=N,n=N,distribution = 'normal')
+    Wrec_plastic[np.diag_indices_from(Wrec_plastic)] = 0
     # Wrec_fixed is a matrix of fixed weights
     Wrec_fixed = connectivity_mask.mask_fixed
     
     Wrec_plus = np.abs(connectivity_mask.mask_plastic*Wrec_plastic+ Wrec_fixed)
     #Weights between the recurrent units
     Wrec = Wrec_plus * ei
+    #Wrec mask
     
     
     fig=plt.figure(1,figsize=(7,5))
@@ -178,13 +184,12 @@ if __name__=="__main__":
     plt.colorbar()
     plt.title('$W^{rec,+}$')
     plt.subplot(224)
-    plt.imshow( Wrec,cmap=cmap)
-    plt.colorbar()
+    im=plt.imshow( Wrec,vmax=1,vmin=-1,cmap=cmap)
+    plt.colorbar(im,extend='both')
     plt.title('$W^{rec}$')
     
     plt.tight_layout()
     
     plt.savefig('net-con.png',dpi= 300)
 #
-
 
