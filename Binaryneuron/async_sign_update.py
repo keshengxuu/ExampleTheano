@@ -16,7 +16,6 @@ Tetime = np.cumsum(s,axis = 1)
 
 # nevent is the flag of  updating binary neuron state 
 nevent = np.zeros(s.shape[0],dtype=int)
-a=0
 for i in range(np.amax(Tetime)): # looping for the simulation time
     for j in range(s.shape[0]):   # looping for the numbe of the neurons
         if nevent[j] <s.shape[1] and  i == Tetime[j,nevent[j]]:
