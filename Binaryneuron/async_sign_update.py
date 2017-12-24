@@ -14,7 +14,7 @@ s = np.random.poisson(10, size=(nr_neurons,30))
 Tetime =np.zeros(s.shape)
 Tetime = np.cumsum(s,axis = 1)
 
-# nevent is the flag of  updating state 
+# nevent is the flag of  updating binary neuron state 
 nevent = np.zeros(s.shape[0],dtype=int)
 a=0
 for i in range(np.amax(Tetime)): # looping for the simulation time
