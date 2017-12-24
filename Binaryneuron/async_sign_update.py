@@ -5,7 +5,6 @@ Created on Sat Dec 23 17:36:56 2017
 keshengxuu@gmail.com
 @author: ksxuu
 """
-
 import numpy as np
 
 state_s0 = np.ones(1000)
